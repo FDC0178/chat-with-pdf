@@ -1,57 +1,53 @@
-import streamlit as st
-from transformers import pipeline
-from sentence_transformers import SentenceTransformer
-import pdfplumber
 import os
+import streamlit as st
+from langchain.embeddings import HuggingFaceEmbeddings
+from langchain.vectorstores import FAISS
+from langchain.chains import RetrievalQA
+from langchain.llms import HuggingFaceHub
+from PyPDF2 import PdfReader
 
-# Set up constants
-EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
-LLM_MODEL_NAME = "tiiuae/falcon-7b-instruct"
+# Fetch Hugging Face API token securely from Streamlit Secrets
+hf_token = st.secrets["HUGGINGFACEHUB_API_TOKEN"]
 
-# Function to extract text from PDF
-@st.cache_data
-def extract_text_from_pdf(pdf_file):
-    text = ""
-    with pdfplumber.open(pdf_file) as pdf:
-        for page in pdf.pages:
-            text += page.extract_text()
-    return text
+# Set your Hugging Face API token in the environment variable
+os.environ["HUGGINGFACEHUB_API_TOKEN"] = hf_token
 
-# Load models with caching
-@st.cache_resource
-def load_models():
-    embedder = SentenceTransformer(EMBEDDING_MODEL)
-    qa_pipeline = pipeline("text-generation", model=LLM_MODEL_NAME, device=-1)  # CPU fallback if no GPU
-    return embedder, qa_pipeline
+# Title of the Streamlit app
+st.title("Chat with your PDF")
 
-# Initialize models
-embedder, qa_pipeline = load_models()
+# File uploader in Streamlit for PDF files
+uploaded_file = st.file_uploader("Upload a PDF", type="pdf")
+if uploaded_file is not None:
+    # Read PDF content
+    pdf_reader = PdfReader(uploaded_file)
+    text = "".join([page.extract_text() for page in pdf_reader.pages])
 
-# Streamlit UI
-st.title("Chat with PDF")
-st.write("Upload a PDF and ask questions about its content using an AI model.")
+    # Extract embeddings using Hugging Face Embeddings
+    embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+    vectordb = FAISS.from_texts([text], embeddings)
 
-# File uploader
-pdf_file = st.file_uploader("Upload your PDF", type=["pdf"])
-if pdf_file is not None:
-    with st.spinner("Processing PDF..."):
-        pdf_text = extract_text_from_pdf(pdf_file)
-    st.success("PDF processed successfully!")
-    
-    # Display extracted text
-    st.subheader("Extracted Text from PDF")
-    st.text_area("", pdf_text, height=300)
+    # Set up the Retriever
+    retriever = vectordb.as_retriever()
 
-    # Question answering
-    st.subheader("Ask a question about the PDF:")
-    question = st.text_input("Type your question here:")
-    if st.button("Submit"):
-        if question:
-            with st.spinner("Processing your question..."):
-                # Embedding text (dummy)
-                context = pdf_text[:1000]  # Limiting context to fit into model memory
-                response = qa_pipeline(question, max_length=50, num_return_sequences=1)[0]["generated_text"]
-            st.subheader("Answer:")
-            st.write(response)
-        else:
-            st.warning("Please enter a question.")
+    # Initialize Hugging Face Hub LLM (e.g., FLAN-T5)
+    llm = HuggingFaceHub(repo_id="google/flan-t5-base", model_kwargs={"temperature": 0.7, "max_length": 512})
+
+    # Create Retrieval-based QA chain
+    qa_chain = RetrievalQA.from_chain_type(llm=llm, retriever=retriever, return_source_documents=True)
+
+    # Input text box for user queries
+    query = st.text_input("Ask a question about your PDF:")
+    if query:
+        # Generate answer
+        result = qa_chain({"query": query})
+        answer = result["result"]
+        source_documents = result["source_documents"]
+
+        # Display answer
+        st.write("Answer:", answer)
+
+        # Display source documents
+        with st.expander("Source Documents"):
+            for i, doc in enumerate(source_documents):
+                st.write(f"Source {i + 1}:")
+                st.write(doc.page_content)
