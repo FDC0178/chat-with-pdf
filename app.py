@@ -1,84 +1,93 @@
+import os
 import streamlit as st
-from PyPDF2 import PdfReader
-from sentence_transformers import SentenceTransformer
 from transformers import pipeline
-from sklearn.metrics.pairwise import cosine_similarity
-import faiss
+from sentence_transformers import SentenceTransformer
+from PyPDF2 import PdfReader
+import torch
 
-# Import configuration
-from config import EMBEDDING_MODEL, LLM_MODEL_NAME, CHUNK_SIZE
+# Constants
+EMBEDDING_MODEL = "all-MiniLM-L6-v2"  # Smaller and efficient embedding model
+LLM_MODEL_NAME = "distilgpt2"  # Lightweight LLM for text generation
 
-# Load Models
+# Load models function
 @st.cache_resource
-def load_models():
-    embedder = SentenceTransformer(EMBEDDING_MODEL)
-    qa_pipeline = pipeline("text-generation", model=LLM_MODEL_NAME, device=0)  # GPU if available
-    return embedder, qa_pipeline
+def load_embedder():
+    """
+    Load the SentenceTransformer embedder for embeddings.
+    """
+    st.write("Loading embedding model...")
+    try:
+        embedder = SentenceTransformer(EMBEDDING_MODEL)
+        st.write("Embedder loaded successfully!")
+        return embedder
+    except Exception as e:
+        st.error(f"Failed to load embedder: {str(e)}")
+        return None
 
-embedder, qa_pipeline = load_models()
 
-# Helper: Extract text from PDF
-def extract_text_from_pdf(pdf_file):
-    reader = PdfReader(pdf_file)
-    text = ""
-    for page in reader.pages:
-        text += page.extract_text()
-    return text
+@st.cache_resource
+def load_qa_pipeline():
+    """
+    Load the QA pipeline using Hugging Face transformers.
+    """
+    st.write("Loading LLM model...")
+    try:
+        # Use CPU (-1) as Streamlit Cloud likely lacks GPU support
+        qa_pipeline = pipeline("text-generation", model=LLM_MODEL_NAME, device=-1)
+        st.write("LLM model loaded successfully!")
+        return qa_pipeline
+    except Exception as e:
+        st.error(f"Failed to load LLM model: {str(e)}")
+        return None
 
-# Helper: Split text into chunks
-def split_text_into_chunks(text, chunk_size=CHUNK_SIZE):
-    words = text.split()
-    return [' '.join(words[i:i+chunk_size]) for i in range(0, len(words), chunk_size)]
 
-# Helper: Generate FAISS index for embedding chunks
-def create_faiss_index(embeddings):
-    dimension = embeddings.shape[1]
-    index = faiss.IndexFlatL2(dimension)
-    index.add(embeddings)
-    return index
+def process_pdf(file):
+    """
+    Extract text from uploaded PDF file.
+    """
+    try:
+        reader = PdfReader(file)
+        text = ""
+        for page in reader.pages:
+            text += page.extract_text()
+        return text
+    except Exception as e:
+        st.error(f"Error reading PDF: {str(e)}")
+        return None
 
-# Streamlit App UI
-st.title("Chat with PDF (Open Source Edition)")
 
-# Upload PDF
-uploaded_file = st.file_uploader("Upload a PDF file", type=["pdf"])
-if uploaded_file:
-    with st.spinner("Extracting text from the PDF..."):
-        text = extract_text_from_pdf(uploaded_file)
-        st.success("Text extracted successfully!")
-        st.text_area("Extracted Content:", text, height=200)
+# Streamlit app layout
+st.title("Chat with PDF")
+st.write("Upload a PDF and ask questions about its content using a lightweight AI model.")
 
-    # Split text and generate embeddings
-    st.write("Processing the PDF...")
-    chunks = split_text_into_chunks(text)
-    embeddings = embedder.encode(chunks)
-    index = create_faiss_index(embeddings)
+# File upload
+uploaded_file = st.file_uploader("Upload your PDF", type=["pdf"])
 
-    st.success("PDF content is ready for questions!")
+if uploaded_file is not None:
+    st.write("Processing PDF...")
+    pdf_content = process_pdf(uploaded_file)
 
-    # Ask Questions
-    st.write("Ask questions about the document:")
-    question = st.text_input("Your question:")
+    if pdf_content:
+        st.text_area("Extracted Text from PDF", pdf_content, height=300)
+        
+        # Load models
+        embedder = load_embedder()
+        qa_pipeline = load_qa_pipeline()
 
-    if question:
-        # Embed the question and find the most relevant chunk
-        question_embedding = embedder.encode([question])
-        distances, indices = index.search(question_embedding, k=3)  # Top 3 relevant chunks
-
-        # Generate context
-        relevant_chunks = " ".join([chunks[idx] for idx in indices[0]])
-        st.write("Context:")
-        st.text_area("Relevant Content:", relevant_chunks, height=150)
-
-        # Query the LLM
-        st.write("Generating an answer...")
-        response = qa_pipeline(
-            f"Context: {relevant_chunks}\n\nQuestion: {question}\n\nAnswer:",
-            max_length=200,
-            temperature=0.7
-        )
-        st.write("Answer:")
-        st.write(response[0]['generated_text'])
-
-# Footer sss
-st.caption("Powered by Streamlit, Hugging Face, FAISS, and Sentence Transformers.")
+        if embedder and qa_pipeline:
+            # User question input
+            question = st.text_input("Ask a question about the PDF:")
+            if question:
+                # Dummy QA Implementation (Since GPT-2 lacks QA capability, adjust here)
+                # In a proper setup, we'd replace this with a full QA pipeline like BERT-QA
+                st.write("Processing your question...")
+                try:
+                    embeddings = embedder.encode(pdf_content)
+                    answer = qa_pipeline(question)[0]["generated_text"]
+                    st.write("Answer:", answer)
+                except Exception as e:
+                    st.error(f"Error generating answer: {str(e)}")
+        else:
+            st.error("Failed to load required models.")
+else:
+    st.info("Upload a PDF to get started!")
