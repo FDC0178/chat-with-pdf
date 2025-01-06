@@ -15,7 +15,7 @@ You can follow this **video tutorial** to see how to set up and use the app!
 [![Watch the video](assets/app-face.png)](assets/demo_tutorial.mp4)
 
 *Alternative hosting:*  
-If you cannot view the embedded video: [Download Video](assets/demo_tutorial.mp4)  
+If you cannot view the embedded video: [Download Video](https://drive.google.com/file/d/1OOKx3wXgWGxLGe0XEOtniDOl33mUtdHd/view?usp=sharing)  
 
 ---
 
