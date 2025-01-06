@@ -1,63 +1,84 @@
-# Chat with PDF Application
+# Chat with your PDF
 
-This application allows you to upload a PDF file, extract its content, and ask questions about it using advanced NLP techniques powered by open-source models. Built with **Streamlit** for the user interface.
+This application allows you to upload a PDF and ask questions about its content using natural language. It leverages embeddings from Hugging Face and a retrieval-based question-answering system.
+
+---
 
 ## Features
 
-- Upload a PDF and view its extracted content.
-- Perform efficient similarity-based queries using **Sentence-Transformers** and **FAISS**.
-- Ask questions about the document, with answers generated using a **GPT-J** or similar model from Hugging Face.
-- Fully open-source pipeline.
+- Upload PDF files.
+- Extract text and create vector embeddings.
+- Ask questions and get AI-powered answers.
+- Easy-to-use Streamlit interface.
 
-## Installation
+---
 
-### Prerequisites
+## Screenshot
 
-- Python 3.8 or higher.
+Below is a preview of the app interface:
 
-### Steps
+![App Screenshot]("D:\OneDrive - Fulcrum Digital\Pictures\Screenshots\Screenshot 2025-01-06 225129.png")
 
-1. Clone the repository:
+---
+
+## Demo
+
+Click on the image below to watch the app in action:
+
+[![Watch the demo video](path_to_your_thumbnail.png)](path_to_your_video_link)
+
+> _Note:_ Replace `path_to_your_thumbnail.png` with the thumbnail image file and `path_to_your_video_link` with the link to your video (YouTube or any hosting service).
+
+---
+
+## How to Run the Application
+
+Follow these steps to set up and run the application:
+
+1. **Clone the repository**:
+
    ```bash
-   git clone https://github.com/yourusername/chat-with-pdf.git
+   git clone https://github.com/your-username/chat-with-pdf.git
    cd chat-with-pdf
    ```
 
-2. Create a virtual environment and activate it:
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
+2. **Install dependencies**:
 
-3. Install the dependencies:
    ```bash
    pip install -r requirements.txt
    ```
 
-4. Run the application:
+3. **Set up your secrets**:
+
+   Add your Hugging Face API token to the `.streamlit/secrets.toml` file. Example:
+
+   ```toml
+   HUGGINGFACEHUB_API_TOKEN = "your_hugging_face_token"
+   ```
+
+4. **Run the application**:
+
    ```bash
    streamlit run app.py
    ```
 
-5. Open your browser and navigate to `http://localhost:8501`.
+---
 
-## Usage
+## Requirements
 
-1. Upload a PDF document.
-2. Wait for the text to be extracted and processed.
-3. Enter a question related to the document.
-4. View the answer and relevant context.
+The following Python libraries are required:
 
-## Acknowledgments
+- `streamlit`
+- `langchain`
+- `faiss-cpu`
+- `PyPDF2`
+- `sentence-transformers`
 
-This application uses the following tools and frameworks:
+Ensure that the required dependencies are installed as listed in `requirements.txt`.
 
-- [Streamlit](https://streamlit.io/)
-- [PyPDF2](https://pypi.org/project/PyPDF2/)
-- [Sentence Transformers](https://www.sbert.net/)
-- [FAISS](https://faiss.ai/)
-- [Hugging Face Transformers](https://huggingface.co/transformers/)
+---
 
-## License
+## Notes
 
-MIT License. See `LICENSE` for details.
+- The app uses Hugging Face embeddings (`hkunlp/instructor-base`) and LLMs (`google/flan-t5-base`) to provide answers based on the document content.
+- The Hugging Face API token is required to interact with the LLMs and embeddings.
