@@ -1,9 +1,5 @@
 streamlit
-PyPDF2
-transformers
-scikit-learn
+langchain
 faiss-cpu
-transformers==4.31.0
-sentence-transformers==2.2.2
-torch==2.0.0
-pdfplumber
+PyPDF2
+sentence-transformers
