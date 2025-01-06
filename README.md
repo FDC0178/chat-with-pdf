@@ -27,7 +27,6 @@ Click on the image below to watch the app in action:
 
 [![Watch the demo video](assets/app-face.png)](assets/demo_video.mp4)
 
-> _Note:_ Replace `path_to_your_thumbnail.png` with the thumbnail image file and `path_to_your_video_link` with the link to your video (YouTube or any hosting service).
 
 ---
 
