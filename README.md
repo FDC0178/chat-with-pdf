@@ -17,7 +17,7 @@ This application allows you to upload a PDF and ask questions about its content 
 
 Below is a preview of the app interface:
 
-![App Screenshot]("D:\OneDrive - Fulcrum Digital\Pictures\Screenshots\Screenshot 2025-01-06 225129.png")
+![App Screenshot](assets/app-face.png)
 
 ---
 
@@ -25,7 +25,7 @@ Below is a preview of the app interface:
 
 Click on the image below to watch the app in action:
 
-[![Watch the demo video](path_to_your_thumbnail.png)](path_to_your_video_link)
+[![Watch the demo video](assets/app-face.png)](assets/demo_video.mp4)
 
 > _Note:_ Replace `path_to_your_thumbnail.png` with the thumbnail image file and `path_to_your_video_link` with the link to your video (YouTube or any hosting service).
 
