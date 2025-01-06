@@ -80,5 +80,5 @@ if uploaded_file:
         st.write("Answer:")
         st.write(response[0]['generated_text'])
 
-# Footer
+# Footer sss
 st.caption("Powered by Streamlit, Hugging Face, FAISS, and Sentence Transformers.")
